@@ -36,12 +36,12 @@ class PHP_CSS {
 	protected $_selector_states = array();
 
 	/**
-	 * Stores a list of css prefixed properties
+	 * Stores a list of css properties that require more formating
 	 *
 	 * @access private
 	 * @var array
 	 */
-	private $_prefixed_properties_list = array(
+	private $_special_properties_list = array(
 		'border-radius',
 		'border-top-left-radius',
 		'border-top-right-radius',
@@ -53,6 +53,7 @@ class PHP_CSS {
 		'transition-duration',
 		'transition-property',
 		'transition-timing-function',
+		'background-image',
 	);
 
 	/**
@@ -179,7 +180,7 @@ class PHP_CSS {
 	}
 
 	/**
-	 * Adds browser prefixed rules to the css output
+	 * Adds browser prefixed rules, and other special rules to the css output
 	 *
 	 * @access public
 	 * @since  1.0
@@ -188,30 +189,35 @@ class PHP_CSS {
 	 * @param  string $value - the value to be placed with the property
 	 * @return $this
 	 */
-	public function add_prefixed_rules( $property, $value )
+	public function add_special_rules( $property, $value )
 	{
-		// Add the rule without the prefix first.
-		$this->add_rule( $property, $value );
-
 		// Switch through the property types and add prefixed rules
 		switch ( $property ) {
 			case 'border-top-left-radius':
+				$this->add_rule( $property, $value );
 				$this->add_rule( $property, $value, '-webkit-' );
 				$this->add_rule( 'border-radius-topleft', $value, '-moz-' );
 			break;
 			case 'border-top-right-radius':
+				$this->add_rule( $property, $value );
 				$this->add_rule( $property, $value, '-webkit-' );
 				$this->add_rule( 'border-radius-topright', $value, '-moz-' );
 			break;
 			case 'border-bottom-left-radius':
+				$this->add_rule( $property, $value );
 				$this->add_rule( $property, $value, '-webkit-' );
 				$this->add_rule( 'border-radius-bottomleft', $value, '-moz-' );
 			break;
 			case 'border-bottom-right-radius':
+				$this->add_rule( $property, $value );
 				$this->add_rule( $property, $value, '-webkit-' );
 				$this->add_rule( 'border-radius-bottomright', $value, '-moz-' );
 			break;
+			case 'background-image':
+				$this->add_rule( $property, sprintf( "url('%s')", $value ) );
+			break;
 			default:
+				$this->add_rule( $property, $value );
 				$this->add_rule( $property, $value, '-webkit-' );
 				$this->add_rule( $property, $value, '-moz-' );
 			break;
@@ -232,8 +238,8 @@ class PHP_CSS {
 	 */
 	public function add_property( $property, $value )
 	{
-		if( in_array( $property, $this->_prefixed_properties_list ) ) {
-			$this->add_prefixed_rules( $property, $value );
+		if( in_array( $property, $this->_special_properties_list ) ) {
+			$this->add_special_rules( $property, $value );
 		} else {
 			$this->add_rule( $property, $value );
 		}
