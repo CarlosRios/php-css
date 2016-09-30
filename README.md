@@ -114,3 +114,26 @@ if( $primary_button_type === 'flat' ) {
 	));
 }
 ```
+
+## Media Queries
+Media query support was added 9/30/16. A few new public methods and class variables were added in order to support media queries. Those methods include
+ - start_media_query
+ - stop_media_query
+ - has_media_query (returns boolean)
+ - get_media_query (returns the current media query, or an empty string)
+
+### Using Media Queries
+Media Queries must be started and stopped using the `start_media_query` and `stop_media_query` methods. By doing this you create a buffer where you can insert more css the way you were previously, except this time it will all be added into a specific query. You can create a media query for a specific screen size as follows.
+
+```php
+// Start a media query
+$css->start_media_query( '(max-width: 786px)' );
+
+$css->set_selector( '#header' )->add_property( 'background', '#222' );
+
+// Stop the media query
+$css->stop_media_query();
+
+// Continue with css outside of the query
+$css->change_selector( '#footer' )->add_property( 'padding', '20px' );
+```
