@@ -4,7 +4,7 @@
  *
  * @author  Carlos Rios
  * @package  PHP_CSS
- * @version  1.0
+ * @version  1.1
  */
 
 namespace CarlosRios;
@@ -73,6 +73,21 @@ class PHP_CSS {
 	protected $_output = '';
 
 	/**
+	 * Stores media queries
+	 * 
+	 * @var null
+	 */
+	protected $_media_query = null;
+
+	/**
+	 * The string that holds all of the css to output inside of the media query
+	 *
+	 * @access protected
+	 * @var string
+	 */
+	protected $_media_query_output = '';
+
+	/**
 	 * Sets a selector to the object and changes the current selector to a new one
 	 *
 	 * @access public
@@ -84,7 +99,7 @@ class PHP_CSS {
 	public function set_selector( $selector = '' )
 	{
 		// Render the css in the output string everytime the selector changes
-		if( $this->_selector != '' ){
+		if( $this->_selector !== '' ){
 			$this->add_selector_rules_to_output();
 		}
 		$this->_selector = $selector;
@@ -265,6 +280,85 @@ class PHP_CSS {
 	}
 
 	/**
+	 * Sets a media query in the class
+	 *
+	 * @since  1.1
+	 * @param  string $value
+	 * @return $this
+	 */
+	public function start_media_query( $value )
+	{
+		// Add the current rules to the output
+		$this->add_selector_rules_to_output();
+
+		// Add any previous media queries to the output
+		if( $this->has_media_query() ) {
+			$this->add_media_query_rules_to_output();
+		}
+
+		// Set the new media query
+		$this->_media_query = $value;
+		return $this;
+	}
+
+	/**
+	 * Stops using a media query.
+	 *
+	 * @see    start_media_query()
+	 *
+	 * @since  1.1
+	 * @return $this
+	 */
+	public function stop_media_query()
+	{
+		return $this->start_media_query( null );
+	}
+
+	/**
+	 * Gets the media query if it exists in the class
+	 *
+	 * @since  1.1
+	 * @return string|int|null
+	 */
+	public function get_media_query()
+	{
+		return $this->_media_query;
+	}
+
+	/**
+	 * Checks if there is a media query present in the class
+	 *
+	 * @since  1.1
+	 * @return boolean
+	 */
+	public function has_media_query()
+	{
+		if( ! empty( $this->get_media_query() ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Adds the current media query's rules to the class' output variable
+	 *
+	 * @since  1.1
+	 * @return $this
+	 */
+	private function add_media_query_rules_to_output()
+	{
+		if( !empty( $this->_media_query_output ) ) {
+			$this->_output .= sprintf( '@media all and %1$s{%2$s}', $this->get_media_query(), $this->_media_query_output );
+
+			// Reset the media query output string
+			$this->_media_query_output = '';
+		}
+
+		return $this;
+	}
+
+	/**
 	 * Adds the current selector rules to the output variable
 	 *
 	 * @access private
@@ -274,11 +368,21 @@ class PHP_CSS {
 	 */
 	private function add_selector_rules_to_output()
 	{
-		if( !empty( $this->_css) ){
+		if( !empty( $this->_css ) ) {
 			$this->prepare_selector_output();
-			$this->_output .= sprintf( '%1$s{%2$s}', $this->_selector_output, $this->_css );
+			$selector_output = sprintf( '%1$s{%2$s}', $this->_selector_output, $this->_css );
+			
+			if( $this->has_media_query() ) {
+				$this->_media_query_output .= $selector_output;
+				$this->reset_css();
+			} else {
+				$this->_output .= $selector_output;
+			}
+
+			// Reset the css
 			$this->reset_css();
 		}
+
 		return $this;
 	}
 
@@ -308,17 +412,17 @@ class PHP_CSS {
 	}
 
 	/**
-	 * Resets the $_css variable in order to add new css to a different selector
+	 * Resets the css variable
 	 *
 	 * @access private
-	 * @since  1.0
+	 * @since  1.1
 	 * 
-	 * @return $this
+	 * @return void
 	 */
 	private function reset_css()
 	{
 		$this->_css = '';
-		return $this;
+		return;
 	}
 
 	/**
@@ -331,7 +435,10 @@ class PHP_CSS {
 	 */
 	public function css_output()
 	{
-		$this->add_selector_rules_to_output(); // Add current selector's rules to output
+		// Add current selector's rules to output
+		$this->add_selector_rules_to_output();
+
+		// Output minified css
 		return $this->_output;
 	}
 
